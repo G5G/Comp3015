@@ -85,9 +85,6 @@
     <ClInclude Include="scenebasic_uniform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\glad.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="helper\skybox.h">
       <Filter>helper</Filter>
     </ClInclude>
@@ -147,6 +144,9 @@
     </ClInclude>
     <ClInclude Include="helper\random.h">
       <Filter>helper</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\glad\glad.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

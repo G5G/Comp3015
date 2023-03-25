@@ -78,13 +78,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\123li\Desktop\3016\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\123li\Desktop\3016\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\123li\Desktop\git\Comp3015\3015\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\123li\Desktop\git\Comp3015\3015\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Users\123li\Desktop\3016\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\123li\Desktop\3016\lib;$(LibraryPath)</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\123li\Desktop\git\Comp3015\3015\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\123li\Desktop\git\Comp3015\3015\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -166,7 +166,7 @@
     <None Include="shader\basic_uniform.vert" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\glad.h" />
+    <ClInclude Include="..\include\glad\glad.h" />
     <ClInclude Include="helper\aabb.h" />
     <ClInclude Include="helper\cube.h" />
     <ClInclude Include="helper\drawable.h" />

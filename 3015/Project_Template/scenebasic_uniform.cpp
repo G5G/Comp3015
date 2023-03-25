@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f,300.0f,1,1),teapot(80,glm::mat4(1.0f)),sky(120.0f)
+SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f,300.0f,1,1),teapot(80,glm::mat4(1.0f)),sky(100.0f)
 {
 	mesh = ObjMesh::load("../Project_Template/media/forest_cabin_LOD0.obj", true);
 	fire = ObjMesh::load("../Project_Template/media/fire.obj", true);
@@ -32,7 +32,22 @@ void SceneBasic_Uniform::initScene()
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 	projection = mat4(1.0f);
 	angle = glm::pi<float>() / 2.0f;
+
+	GLuint trex11 = Texture::loadTexture("media/base_color.png");
+	GLuint trex22 = Texture::loadTexture("media/vine.png");
+	GLuint cubeTex = Texture::loadHdrCubeMap("media/texture/cube/pisa-hdr/pisa");
+	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, trex11);
+
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, trex22);
+
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
+
 	setupFBO();
+
+
 	GLfloat verts[] =
 	{
 		-1.0f,-1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
@@ -69,9 +84,9 @@ void SceneBasic_Uniform::initScene()
 	prog.setUniform("Lights[0].La", vec3(0.2f));
 	prog.setUniform("Lights[1].La", vec3(0.2f));
 
-	prog.setUniform("Fog.MaxDist", 2000.0f);
+	prog.setUniform("Fog.MaxDist", 200.0f);
 	prog.setUniform("Fog.MinDist", 20.0f);
-	prog.setUniform("Fog.Colour", vec3(0.1f, 0.2f, 0.3f));
+	prog.setUniform("Fog.Colour", vec3(0.05f, 0.06f, 0.07f));
 
 	prog.setUniform("LumThresh", 1.7f);
 	float weights[10], sum, sigma2 = 25.0f;
@@ -111,20 +126,6 @@ void SceneBasic_Uniform::initScene()
 	glBindSampler(1, nearestSampler);
 	glBindSampler(2, nearestSampler);
 
-
-
-
-	/*GLuint trex11 = Texture::loadTexture("media/base_color.png");
-	GLuint trex22 = Texture::loadTexture("media/vine.png");
-	GLuint cubeTex = Texture::loadHdrCubeMap("media/texture/cube/pisa-hdr/pisa");
-	glActiveTexture(GL_TEXTURE3);
-	glBindTexture(GL_TEXTURE_2D, tex1);
-
-	glActiveTexture(GL_TEXTURE4);
-	glBindTexture(GL_TEXTURE_2D, tex2);
-
-	glActiveTexture(GL_TEXTURE5);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);*/
 	//view = glm::lookAt(vec3(40.0f, 10.0f, 7.5f), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 }
 
@@ -190,6 +191,7 @@ void SceneBasic_Uniform::render()
 
 void SceneBasic_Uniform::resize(int w, int h)
 {
+
     glViewport(0, 0, w, h);
     width = w;
     height = h;
@@ -199,6 +201,7 @@ void SceneBasic_Uniform::resize(int w, int h)
 }
 void SceneBasic_Uniform::setMatrices()
 {
+
 	mat4 mv = view * model;
 	prog.setUniform("ModelViewMatrix", mv);
 	prog.setUniform("NormalMatrix",glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));

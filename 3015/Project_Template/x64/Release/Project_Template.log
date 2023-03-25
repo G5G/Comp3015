@@ -1,0 +1,24 @@
+﻿  glad.c
+  cube.cpp
+  glslprogram.cpp
+  glutils.cpp
+  objmesh.cpp
+C:\Users\123li\Desktop\git\Comp3015\3015\Project_Template\helper\objmesh.cpp(188,41): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\123li\Desktop\git\Comp3015\3015\Project_Template\helper\objmesh.cpp(194,48): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\123li\Desktop\git\Comp3015\3015\Project_Template\helper\objmesh.cpp(198,43): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+  plane.cpp
+  skybox.cpp
+  sphere.cpp
+  stb_image.cpp
+  teapot.cpp
+  texture.cpp
+  torus.cpp
+  trianglemesh.cpp
+  main.cpp
+  scenebasic_uniform.cpp
+  Previous IPDB not found, fall back to full compilation.
+LINK : warning LNK4098: defaultlib 'MSVCRTD' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Generating code
+  All 1389 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  Project_Template.vcxproj -> C:\Users\123li\Desktop\git\Comp3015\3015\Project_Template\x64\Release\Project_Template.exe

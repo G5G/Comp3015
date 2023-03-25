@@ -14,7 +14,6 @@ class SceneBasic_Uniform : public Scene
 {
 private:
     GLSLProgram prog;
-    //GLuint hdrFBO;
     GLuint fsQuad;
     GLuint hdrFbo, blurFbo;
     GLuint hdrTex, tex1, tex2;

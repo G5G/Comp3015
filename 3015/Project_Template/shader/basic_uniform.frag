@@ -4,9 +4,9 @@ in vec4 Position;
 in vec3 Normal;
 in vec2 TexCoord;
 in vec3 Vec;
-//layout(binding=3) uniform sampler2D Tex1;
-//layout(binding=4) uniform sampler2D Tex2;
-//layout(binding=5) uniform samplerCube sky;
+layout(binding=3) uniform sampler2D Tex1;
+layout(binding=4) uniform sampler2D Tex2;
+layout(binding=5) uniform samplerCube sky;
 
 layout(binding=0) uniform sampler2D HdrTex;
 layout (binding=1) uniform sampler2D BlurTex1;
@@ -77,13 +77,13 @@ const vec3 lum = vec3(0.2126,0.7152,0.0722);
 
 vec3 blinnPhong(vec3 n,vec4 pos, int i)
 {
-	//vec4 HouseColour=texture(Tex1,TexCoord);
-	//vec4 GroundColour=texture(Tex2,TexCoord);
+	vec4 HouseColour=texture(Tex1,TexCoord);
+	vec4 GroundColour=texture(Tex2,TexCoord);
 
-	//vec3 texColour = mix(HouseColour.rgb,GroundColour.rgb,GroundColour.a);
+	vec3 texColour = mix(HouseColour.rgb,GroundColour.rgb,GroundColour.a);
 
-	//vec3 ambient=Lights[i].La*Material.Ka* texColour;
-	vec3 ambient=Lights[i].La*Material.Ka;
+	vec3 ambient=Lights[i].La*Material.Ka* texColour;
+	//vec3 ambient=Lights[i].La*Material.Ka;
 	vec3 s = normalize(Lights[i].Position.xyz - pos.xyz);
 
 	
