@@ -18,8 +18,9 @@ using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f,300.0f,1,1),teapot(80,glm::mat4(1.0f)),sky(100.0f)
+SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f,300.0f,1,1),sky(100.0f)
 {
+	//Load objects 
 	mesh = ObjMesh::load("../Project_Template/media/forest_cabin_LOD0.obj", true);
 	fire = ObjMesh::load("../Project_Template/media/fire.obj", true);
 }
@@ -32,7 +33,7 @@ void SceneBasic_Uniform::initScene()
 	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
 	projection = mat4(1.0f);
 	angle = glm::pi<float>() / 2.0f;
-
+	//Load textures
 	GLuint trex11 = Texture::loadTexture("media/base_color.png");
 	GLuint trex22 = Texture::loadTexture("media/vine.png");
 	GLuint cubeTex = Texture::loadHdrCubeMap("media/texture/cube/pisa-hdr/pisa");
@@ -45,6 +46,7 @@ void SceneBasic_Uniform::initScene()
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
 
+	//Runs the Fbo setup
 	setupFBO();
 
 
@@ -75,20 +77,13 @@ void SceneBasic_Uniform::initScene()
 	glVertexAttribPointer((GLuint)2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(2); // Texture coordinates
 	glBindVertexArray(0);
-	//vec3 intense = vec3(0.000000000001f);
-	prog.setUniform("Lights[0].Ld", vec3(0.6f));
-	prog.setUniform("Lights[1].Ld", vec3(0.6f));
-	prog.setUniform("Lights[0].Ls", vec3(0.6f));
-	prog.setUniform("Lights[1].Ls", vec3(0.6f));
-	//intense = vec3(0.03f);
-	prog.setUniform("Lights[0].La", vec3(0.2f));
-	prog.setUniform("Lights[1].La", vec3(0.2f));
 
-	prog.setUniform("Fog.MaxDist", 200.0f);
-	prog.setUniform("Fog.MinDist", 20.0f);
-	prog.setUniform("Fog.Colour", vec3(0.05f, 0.06f, 0.07f));
-
-	prog.setUniform("LumThresh", 1.7f);
+	//Configurable Fog settings 
+	prog.setUniform("Fog.MaxDist", 100.0f);
+	prog.setUniform("Fog.MinDist", 10.0f);
+	prog.setUniform("Fog.Colour", vec3(0.3f, 0.3f, 0.3f));
+	//Configurable bloom sensitivity less = more sensetive
+	prog.setUniform("LumThresh", 1.0f);
 	float weights[10], sum, sigma2 = 25.0f;
 	weights[0] = gauss(0, sigma2);
 	sum = weights[0];
@@ -126,13 +121,13 @@ void SceneBasic_Uniform::initScene()
 	glBindSampler(1, nearestSampler);
 	glBindSampler(2, nearestSampler);
 
-	//view = glm::lookAt(vec3(40.0f, 10.0f, 7.5f), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 }
 
 
 void SceneBasic_Uniform::compile()
 {
 	try {
+		//compiles shaders
 		prog.compileShader("shader/basic_uniform.vert");
 		prog.compileShader("shader/basic_uniform.frag");
 		prog.link();
@@ -145,16 +140,7 @@ void SceneBasic_Uniform::compile()
 
 void SceneBasic_Uniform::update(float t)
 {
-	//view = glm::lookAt(vec3(40.0f, 10.0f, 7.5f*angle), vec3(0.0f, 0.75f, 0.0f+angle), vec3(0.0f, 1.0f + angle, 0.0f));
-	//prog.setUniform("Lights[0].Ld", vec3(angle/10));
-	//prog.setUniform("Lights[0].Ls", vec3(t));
-	//prog.setUniform("Lights[0].La", vec3(t));
-
-	//prog.setUniform("Lights[1].Ld", vec3(t / 10));
-	//prog.setUniform("Lights[1].Ls", vec3(t));
-	//prog.setUniform("Lights[1].La", vec3(t));
-	
-
+	//calculates angle variable
 	float deltaT = t - tPrev;
 	if (tPrev == 0.0f) {
 		deltaT = 0.0f;
@@ -164,22 +150,25 @@ void SceneBasic_Uniform::update(float t)
 	if (angle > glm::two_pi<float>()) {
 		angle -= glm::two_pi<float>();
 	}
+
+	//updates Light positions
+
 	vec4 lightPos = vec4(5.0f * vec3(cosf(angle) * 7.5f, 1.5f, sinf(angle) * 7.5f), 1.0f);
 	prog.setUniform("Lights[0].Position", vec4(lightPos));
-	lightPos.x = +4.10f;
+	lightPos = vec4(5.0f * vec3(cosf(-angle) * 7.5f, 1.5f, sinf(-angle) * 7.5f), 1.0f);
 	prog.setUniform("Lights[1].Position", vec4(lightPos));
-	lightPos.x = -4.10f;
+	lightPos = vec4(5.0f * vec3(cosf(angle) * 2.5f, 1.5f, sinf(-angle) * 4.5f), 1.0f);
 	prog.setUniform("Lights[2].Position", vec4(lightPos));
 
+	prog.setUniform("PointLight.Position", vec4(5.0f * vec3(sinf(angle) * 7.5f, 1.5f, sinf(angle) * 7.5f), 1.0f));
 }
 
 void SceneBasic_Uniform::render()
 {
-	view = glm::lookAt(vec3(40.0f * cos(angle),7.5f, 7.5f*sin(angle)), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-	//view = glm::lookAt(vec3(40.0f , 7.5f, 7.5f) , vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-	//vec4 lightPos = vec4(300.0f, 30.0f, 10.0f, 1.0f);
-	//vec4 lightPos = vec4(0.0f, 14.0f, 0.0f, 1.0f);
+	//updates the view
+	view = glm::lookAt(vec3(50.0f * cos(angle),7.5f, 7.5f*sin(angle)), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 
+	//runs each passes for bloom
 	pass1();
 	computeLogAveLuminance();
 	pass2();
@@ -201,7 +190,7 @@ void SceneBasic_Uniform::resize(int w, int h)
 }
 void SceneBasic_Uniform::setMatrices()
 {
-
+	//sets Matrices
 	mat4 mv = view * model;
 	prog.setUniform("ModelViewMatrix", mv);
 	prog.setUniform("NormalMatrix",glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
@@ -213,14 +202,13 @@ void SceneBasic_Uniform::setMatrices()
 
 void SceneBasic_Uniform::pass1()
 {
-	
+	//1st pass of bloom
 	prog.setUniform("Pass", 1);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 	glViewport(0, 0, width, height);
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFbo);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
-	//view = glm::lookAt(vec3(2.0f, 0.0f, 14.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 	projection = glm::perspective(glm::radians(70.0f), (float)width / height, 0.3f, 100.0f);
 	drawScene();
 
@@ -228,6 +216,7 @@ void SceneBasic_Uniform::pass1()
 
 void SceneBasic_Uniform::pass2()
 {
+
 	prog.setUniform("Pass", 2);
 	glBindFramebuffer(GL_FRAMEBUFFER, blurFbo);
 	// We're writing to tex1 this time
@@ -353,35 +342,43 @@ float SceneBasic_Uniform::gauss(float x, float sigma2)
 
 void SceneBasic_Uniform::drawScene()
 {
-	
-	//vec4 lightPos = vec4(0.0f, 4.0f, 2.5f, 1.0f);
-	//lightPos.x = -7.0f;
-	//prog.setUniform("Lights[0].Position", view * lightPos);
-	//lightPos.x = 0.0f;
-	//prog.setUniform("Lights[1].Position", view * lightPos);
-	//lightPos.x = 7.0f;
-	//prog.setUniform("Lights[2].Position", view * lightPos);
+	//Directional light------------------------------
+	//Sets the Light diffuse value
+	prog.setUniform("Lights[0].Ld", vec3(0.1f));
+	prog.setUniform("Lights[1].Ld", vec3(0.1f));
+	prog.setUniform("Lights[2].Ld", vec3(0.1f));
+	//Sets the Light specular value
+	prog.setUniform("Lights[0].Ls", vec3(0.1f));
+	prog.setUniform("Lights[1].Ls", vec3(0.1f));
+	prog.setUniform("Lights[2].Ls", vec3(0.1f));
 
-
-	prog.setUniform("Lights[0].Ld", vec3(0.2f));
-	prog.setUniform("Lights[1].Ld", vec3(0.2f));
-	prog.setUniform("Lights[2].Ld", vec3(0.2f));
-	prog.setUniform("Lights[0].Ls", vec3(0.2f));
-	prog.setUniform("Lights[1].Ls", vec3(0.2f));
-	prog.setUniform("Lights[2].Ls", vec3(0.2f));
-
+	//Sets the Light ambient value
 	prog.setUniform("Lights[0].La", vec3(0.2f));
 	prog.setUniform("Lights[1].La", vec3(0.2f));
 	prog.setUniform("Lights[2].La", vec3(0.2f));
+	//---------------------------------------------
+	// 
+	// Point Light---------------------------------
+	prog.setUniform("PointLight.La", vec3(0.4f, 0.2f, 0.2f));
+	prog.setUniform("PointLight.Ld", vec3(3.8f, 1.0f, 1.0f));
+	prog.setUniform("PointLight.Ls", vec3(2.0f, 1.0f, 1.0f));
+	prog.setUniform("PointLight.constant", 0.001f);
+	prog.setUniform("PointLight.linear", 0.009f);
+	prog.setUniform("PointLight.quadratic", 0.0022f);
+	//----------------------------------------------
 
 
-
-	prog.setUniform("Material.Kd", 0.204f, 0.128f, 0.89f);
-	prog.setUniform("Material.Ks", 0.5f, 0.5f, 0.5f);
-	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
+	//sets the Material diffuse value
+	prog.setUniform("Material.Kd", 0.5f, 0.6f, 0.4f);
+	//sets the Material specular value
+	prog.setUniform("Material.Ks", 0.5f, 0.6f, 0.4f);
+	//sets the Material ambient value
+	prog.setUniform("Material.Ka", 0.5f, 0.6f, 0.4f);
+	//sets the Material Shininess value
 	prog.setUniform("Material.Shininess", 100.0f);
 	model = mat4(1.0f);
 	setMatrices();
+	//renders the base plane
 	plane.render();
 
 	
@@ -392,6 +389,27 @@ void SceneBasic_Uniform::drawScene()
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(0.0f, 14.0f, 0.0f));
 	setMatrices();
+	//renders the 1st house
+	mesh->render();
+
+	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
+	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
+	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
+	prog.setUniform("Material.Shininess", 100.0f);
+	model = mat4(1.0f);
+	model = glm::translate(model, vec3(-29.0f, 14.0f, 36.0f));
+	setMatrices();
+	//renders the 2nd house
+	mesh->render();
+
+	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
+	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
+	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
+	prog.setUniform("Material.Shininess", 100.0f);
+	model = mat4(1.0f);
+	model = glm::translate(model, vec3(29.0f, 14.0f, 36.0f));
+	setMatrices();
+	//renders the 3rd house
 	mesh->render();
 
 	
@@ -400,10 +418,13 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
 	prog.setUniform("Material.Shininess", 100.0f);
 	model = mat4(1.0f);
-	model = glm::translate(model, vec3(0.0f, 1.0f, 20.0f));
+	model = glm::translate(model, vec3(0.0f, 1.0f, 35.0f));
+	model = glm::scale(model, vec3(3.3f, 3.3f, 3.3f));
 	setMatrices();
+	//renders the firePit located in the center of the scene
 	fire->render();
-
+	
+	//renders skybox
 	sky.render();
 	
 

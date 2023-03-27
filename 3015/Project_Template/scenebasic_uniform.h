@@ -17,10 +17,7 @@ private:
     GLuint fsQuad;
     GLuint hdrFbo, blurFbo;
     GLuint hdrTex, tex1, tex2;
-    //GLuint quad;
-    //GLuint hdrTex, avgTex;
     GLuint linearSampler, nearestSampler;
-    Teapot teapot;
     Plane plane;
     std::unique_ptr<ObjMesh> mesh;
     std::unique_ptr<ObjMesh> fire;
@@ -38,11 +35,8 @@ private:
     float gauss(float, float);
     void computeLogAveLuminance();
     void drawScene();
-
-
 public:
     SceneBasic_Uniform();
-
     void initScene();
     void update( float t );
     void render();
