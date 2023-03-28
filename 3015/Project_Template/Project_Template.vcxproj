@@ -78,13 +78,13 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\123li\Desktop\git\Comp3015\3015\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\123li\Desktop\git\Comp3015\3015\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Dependencies\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\123li\Desktop\git\Comp3015\3015\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\123li\Desktop\git\Comp3015\3015\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Dependencies\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
