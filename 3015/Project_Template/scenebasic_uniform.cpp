@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(0), deltaT(0),time(0), particleLifetime(6.0f), nParticles(4000), emitterPos(1, 0, 0), emitterDir(-1, 2, 0)
+SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(1), deltaT(0),time(0), particleLifetime(6.0f), nParticles(200), emitterPos(0, 1, 35.0f), emitterDir(1.1f, 11.1f, 111.1f)
 {
 	//Load objects 
 	mesh = ObjMesh::load("../Project_Template/media/forest_cabin_LOD0.obj", true);
@@ -42,7 +42,7 @@ void SceneBasic_Uniform::initScene()
 
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, trex22);
-
+	
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
 	//Runs the Fbo setup
@@ -144,11 +144,13 @@ void SceneBasic_Uniform::initScene()
 	prog.setUniform("PointLight.quadratic", 0.0022f);
 
 	
+
 	flatProg.use();
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
+
 	model = mat4(1.0f);
 
 	glActiveTexture(GL_TEXTURE7);
@@ -159,8 +161,8 @@ void SceneBasic_Uniform::initScene()
 	flatProg.setUniform("RandomTex", 8);
 	flatProg.setUniform("ParticleTex", 7);
 	flatProg.setUniform("ParticleLifetime", particleLifetime);
-	flatProg.setUniform("ParticleSize", 10.5f);
-	flatProg.setUniform("Accel", vec3(1.0f, -0.5f, 1.0f));
+	flatProg.setUniform("ParticleSize", 1.5f);
+	flatProg.setUniform("Accel", vec3(1.0f, 1.5f, 1.0f));
 	flatProg.setUniform("Emitter", emitterPos);
 	flatProg.setUniform("EmitterBasis", ParticleUtils::makeArbitraryBasis(emitterDir));
 
@@ -170,6 +172,7 @@ void SceneBasic_Uniform::initScene()
 }
 void SceneBasic_Uniform::initBuffers()
 {
+	
 	glGenBuffers(2, posBuf);
 	glGenBuffers(2, velBuf);
 	glGenBuffers(2, age);
@@ -192,7 +195,7 @@ void SceneBasic_Uniform::initBuffers()
 
 	std::vector<GLfloat> initialAges(nParticles);
 	float rate = particleLifetime / nParticles;
-	for (int i = 0; i < nParticles; i++) {
+	for(int i = 0; i < nParticles; i++) {
 		initialAges[i] = rate * (i - nParticles);
 	}
 
@@ -262,7 +265,7 @@ void SceneBasic_Uniform::compile()
 		flatProg.compileShader("shader/flat_vert.glsl");
 
 		GLuint progHandle = flatProg.getHandle();
-		const char* outputNames[] = { "Position", "Velocity", "Age" };
+		const GLchar* outputNames[] = { "Position", "Velocity", "Age" };
 		glTransformFeedbackVaryings(progHandle, 3, outputNames, GL_SEPARATE_ATTRIBS);
 		flatProg.link();
 		flatProg.use();
@@ -313,9 +316,6 @@ void SceneBasic_Uniform::render()
 	view = glm::lookAt(vec3(10.0f, 10.0f, 55.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 	
 	prog.use();
-
-	// Swap the buffers
-	//drawBuf = 1 - drawBuf;
 	
 	pass1();
 	computeLogAveLuminance();
@@ -511,7 +511,7 @@ void SceneBasic_Uniform::drawScene()
 	prog.use();
 
 	//sets the Material diffuse value
-	/*prog.setUniform("Material.Kd", 0.5f, 0.6f, 0.4f);
+	prog.setUniform("Material.Kd", 0.5f, 0.6f, 0.4f);
 	//sets the Material specular value
 	prog.setUniform("Material.Ks", 0.5f, 0.6f, 0.4f);
 	//sets the Material ambient value
@@ -532,7 +532,7 @@ void SceneBasic_Uniform::drawScene()
 	model = glm::translate(model, vec3(0.0f, 14.0f, 0.0f));
 	setMatrices(prog);
 	//renders the 1st house
-	mesh->render();*/
+	mesh->render();
 
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
@@ -603,7 +603,8 @@ void SceneBasic_Uniform::drawScene()
 	glVertexAttribDivisor(1, 1);
 	glVertexAttribDivisor(2, 1);
 
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticles*6);
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticles * 6);
+	
 
 	glBindVertexArray(0);
 	glDepthMask(GL_TRUE);
