@@ -4,16 +4,35 @@
 #include <glad/glad.h>
 #include "helper/scene.h"
 #include "helper/glslprogram.h"
-#include "helper/torus.h"
+
 #include "helper/teapot.h"
 #include "helper/plane.h"
 #include <glm/glm.hpp>
 #include "helper/objmesh.h"
 #include "helper/skybox.h"
+
+
 class SceneBasic_Uniform : public Scene
 {
 private:
-    GLSLProgram prog;
+    GLSLProgram prog,flatProg;
+    //Random rand;
+
+    GLuint posBuf[2], velBuf[2], age[2];
+
+    GLuint particleArray[2];
+
+    GLuint feedback[2];
+
+
+    
+    int nParticles;
+    float particleLifetime;
+    float angle;
+    float time, deltaT;
+    GLuint drawBuf; 
+    glm::vec3 emitterPos,emitterDir;
+
     GLuint fsQuad;
     GLuint hdrFbo, blurFbo;
     GLuint hdrTex, tex1, tex2;
@@ -22,7 +41,6 @@ private:
     std::unique_ptr<ObjMesh> mesh;
     std::unique_ptr<ObjMesh> fire;
     SkyBox sky;
-	float angle;
     int bloomBufWidth, bloomBufHeight;
 	float tPrev;
     void compile();
@@ -35,13 +53,15 @@ private:
     float gauss(float, float);
     void computeLogAveLuminance();
     void drawScene();
+    void setMatrices(GLSLProgram&);
+    void initBuffers();
 public:
+
     SceneBasic_Uniform();
     void initScene();
     void update( float t );
     void render();
     void resize(int, int);
-	void setMatrices();
 };
 
 #endif // SCENEBASIC_UNIFORM_H

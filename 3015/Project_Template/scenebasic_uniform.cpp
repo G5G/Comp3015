@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include "helper/texture.h"
-
+#include "helper/particleutils.h"
 #include <string>
 using std::string;
 
@@ -18,25 +18,25 @@ using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f,300.0f,1,1),sky(100.0f)
+SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(0), deltaT(0),time(0), particleLifetime(6.0f), nParticles(4000), emitterPos(1, 0, 0), emitterDir(-1, 2, 0)
 {
 	//Load objects 
 	mesh = ObjMesh::load("../Project_Template/media/forest_cabin_LOD0.obj", true);
 	fire = ObjMesh::load("../Project_Template/media/fire.obj", true);
+
 }
 
 void SceneBasic_Uniform::initScene()
 {
-
 	compile();
-	glEnable(GL_DEPTH_TEST);
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-	projection = mat4(1.0f);
-	angle = glm::pi<float>() / 2.0f;
+
+
 	//Load textures
 	GLuint trex11 = Texture::loadTexture("media/base_color.png");
 	GLuint trex22 = Texture::loadTexture("media/vine.png");
 	GLuint cubeTex = Texture::loadHdrCubeMap("media/texture/cube/pisa-hdr/pisa");
+	
+
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, trex11);
 
@@ -45,7 +45,6 @@ void SceneBasic_Uniform::initScene()
 
 	glActiveTexture(GL_TEXTURE5);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
-
 	//Runs the Fbo setup
 	setupFBO();
 
@@ -121,8 +120,136 @@ void SceneBasic_Uniform::initScene()
 	glBindSampler(1, nearestSampler);
 	glBindSampler(2, nearestSampler);
 
-}
+	prog.use();
+	prog.setUniform("Lights[0].Ld", vec3(0.1f));
+	prog.setUniform("Lights[1].Ld", vec3(0.1f));
+	prog.setUniform("Lights[2].Ld", vec3(0.1f));
+	//Sets the Light specular value
+	prog.setUniform("Lights[0].Ls", vec3(0.1f));
+	prog.setUniform("Lights[1].Ls", vec3(0.1f));
+	prog.setUniform("Lights[2].Ls", vec3(0.1f));
 
+	//Sets the Light ambient value
+	prog.setUniform("Lights[0].La", vec3(0.2f));
+	prog.setUniform("Lights[1].La", vec3(0.2f));
+	prog.setUniform("Lights[2].La", vec3(0.2f));
+	//---------------------------------------------
+	// 
+	// Point Light---------------------------------
+	prog.setUniform("PointLight.La", vec3(0.4f, 0.2f, 0.2f));
+	prog.setUniform("PointLight.Ld", vec3(3.8f, 1.0f, 1.0f));
+	prog.setUniform("PointLight.Ls", vec3(2.0f, 1.0f, 1.0f));
+	prog.setUniform("PointLight.constant", 0.001f);
+	prog.setUniform("PointLight.linear", 0.009f);
+	prog.setUniform("PointLight.quadratic", 0.0022f);
+
+	
+	flatProg.use();
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST);
+	model = mat4(1.0f);
+
+	glActiveTexture(GL_TEXTURE7);
+	Texture::loadTexture("media/fire.png");
+	glActiveTexture(GL_TEXTURE8);
+	ParticleUtils::createRandomTex1D(nParticles * 3);
+	initBuffers();
+	flatProg.setUniform("RandomTex", 8);
+	flatProg.setUniform("ParticleTex", 7);
+	flatProg.setUniform("ParticleLifetime", particleLifetime);
+	flatProg.setUniform("ParticleSize", 10.5f);
+	flatProg.setUniform("Accel", vec3(1.0f, -0.5f, 1.0f));
+	flatProg.setUniform("Emitter", emitterPos);
+	flatProg.setUniform("EmitterBasis", ParticleUtils::makeArbitraryBasis(emitterDir));
+
+	//flatProg.use();
+	
+
+}
+void SceneBasic_Uniform::initBuffers()
+{
+	glGenBuffers(2, posBuf);
+	glGenBuffers(2, velBuf);
+	glGenBuffers(2, age);
+	
+	int size = nParticles *3* sizeof(GLfloat);
+	glBindBuffer(GL_ARRAY_BUFFER, posBuf[0]);
+
+	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, posBuf[1]);
+	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, velBuf[0]);
+	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, velBuf[1]);
+	glBufferData(GL_ARRAY_BUFFER, size, 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, age[0]);
+	glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(float), 0, GL_DYNAMIC_COPY);
+	glBindBuffer(GL_ARRAY_BUFFER, age[1]);
+	glBufferData(GL_ARRAY_BUFFER, nParticles * sizeof(float), 0, GL_DYNAMIC_COPY);
+
+
+	std::vector<GLfloat> initialAges(nParticles);
+	float rate = particleLifetime / nParticles;
+	for (int i = 0; i < nParticles; i++) {
+		initialAges[i] = rate * (i - nParticles);
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, age[0]);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, nParticles * sizeof(float), initialAges.data());
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glGenVertexArrays(2, particleArray);
+
+
+
+	glBindVertexArray(particleArray[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBuf[0]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, velBuf[0]);
+	glVertexAttribPointer(1,3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, age[0]);
+	glVertexAttribPointer(2,1, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(particleArray[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, posBuf[1]);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER,velBuf[1]);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, age[1]);
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0);
+
+	glGenTransformFeedbacks(2, feedback);
+
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBuf[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBuf[0]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, age[0]);
+
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, posBuf[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 1, velBuf[1]);
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 2, age[1]);
+
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+
+
+
+
+}
 
 void SceneBasic_Uniform::compile()
 {
@@ -131,7 +258,15 @@ void SceneBasic_Uniform::compile()
 		prog.compileShader("shader/basic_uniform.vert");
 		prog.compileShader("shader/basic_uniform.frag");
 		prog.link();
-		prog.use();
+		flatProg.compileShader("shader/flat_frag.glsl");
+		flatProg.compileShader("shader/flat_vert.glsl");
+
+		GLuint progHandle = flatProg.getHandle();
+		const char* outputNames[] = { "Position", "Velocity", "Age" };
+		glTransformFeedbackVaryings(progHandle, 3, outputNames, GL_SEPARATE_ATTRIBS);
+		flatProg.link();
+		flatProg.use();
+		
 	} catch (GLSLProgramException &e) {
 		cerr << e.what() << endl;
 		exit(EXIT_FAILURE);
@@ -140,19 +275,22 @@ void SceneBasic_Uniform::compile()
 
 void SceneBasic_Uniform::update(float t)
 {
+
 	//calculates angle variable
-	float deltaT = t - tPrev;
-	if (tPrev == 0.0f) {
+	deltaT = t - time;
+	time = t;
+	angle = std::fmod(angle + 0.01f, glm::two_pi<float>());
+	/*if (tPrev == 0.0f) {
 		deltaT = 0.0f;
 	}
 	tPrev = t;
 	angle += 0.25f * deltaT;
 	if (angle > glm::two_pi<float>()) {
 		angle -= glm::two_pi<float>();
-	}
+	}*/
 
 	//updates Light positions
-
+	prog.use();
 	vec4 lightPos = vec4(5.0f * vec3(cosf(angle) * 7.5f, 1.5f, sinf(angle) * 7.5f), 1.0f);
 	prog.setUniform("Lights[0].Position", vec4(lightPos));
 	lightPos = vec4(5.0f * vec3(cosf(-angle) * 7.5f, 1.5f, sinf(-angle) * 7.5f), 1.0f);
@@ -166,15 +304,29 @@ void SceneBasic_Uniform::update(float t)
 void SceneBasic_Uniform::render()
 {
 	//updates the view
-	view = glm::lookAt(vec3(50.0f * cos(angle),7.5f, 7.5f*sin(angle)), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-
+	//view = glm::lookAt(vec3(50.0f * cos(angle),7.5f, 7.5f*sin(angle)), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	//view = glm::lookAt(vec3(4.0f * cos(angle), 1.5f, 4.0f * sin(angle)), vec3(0.0f, 1.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	//vec3 camerapos(4.0 * cos(angle), 1.5f, 4.0f * sin(angle));
+	//view = glm::lookAt(camerapos, vec3(0.0f, 1.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 	//runs each passes for bloom
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	view = glm::lookAt(vec3(10.0f, 10.0f, 55.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+	
+	prog.use();
+
+	// Swap the buffers
+	//drawBuf = 1 - drawBuf;
+	
 	pass1();
 	computeLogAveLuminance();
 	pass2();
 	pass3();
 	pass4();
+
 	pass5();
+
+
+
 	
 }
 
@@ -188,20 +340,24 @@ void SceneBasic_Uniform::resize(int w, int h)
     
     
 }
-void SceneBasic_Uniform::setMatrices()
+void SceneBasic_Uniform::setMatrices(GLSLProgram& p)
 {
 	//sets Matrices
 	mat4 mv = view * model;
-	prog.setUniform("ModelViewMatrix", mv);
-	prog.setUniform("NormalMatrix",glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
-	prog.setUniform("MVP", projection * mv);
-	prog.setUniform("ProjectionMatrix", projection);
+	p.setUniform("ModelViewMatrix", mv);
+	p.setUniform("NormalMatrix",glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
+	p.setUniform("MVP", projection*mv);
+	p.setUniform("ProjectionMatrix", projection);
+	p.setUniform("MV", mv);
+	p.setUniform("Proj",projection);
     
 }
 
 
 void SceneBasic_Uniform::pass1()
 {
+
+	prog.use();
 	//1st pass of bloom
 	prog.setUniform("Pass", 1);
 	glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
@@ -228,7 +384,7 @@ void SceneBasic_Uniform::pass2()
 	model = mat4(1.0f);
 	view = mat4(1.0f);
 	projection = mat4(1.0f);
-	setMatrices();
+	setMatrices(prog);
 	// Render the full-screen quad
 	glBindVertexArray(fsQuad);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -268,6 +424,10 @@ void SceneBasic_Uniform::pass5()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	// Revert to nearest sampling
 	glBindSampler(1, nearestSampler);
+
+
+
+
 }
 
 void SceneBasic_Uniform::computeLogAveLuminance()
@@ -289,6 +449,7 @@ void SceneBasic_Uniform::computeLogAveLuminance()
 
 void SceneBasic_Uniform::setupFBO()
 {
+	prog.use();
 	// Generate and bind the framebuffer
 	glGenFramebuffers(1, &hdrFbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFbo);
@@ -342,34 +503,15 @@ float SceneBasic_Uniform::gauss(float x, float sigma2)
 
 void SceneBasic_Uniform::drawScene()
 {
-	//Directional light------------------------------
-	//Sets the Light diffuse value
-	prog.setUniform("Lights[0].Ld", vec3(0.1f));
-	prog.setUniform("Lights[1].Ld", vec3(0.1f));
-	prog.setUniform("Lights[2].Ld", vec3(0.1f));
-	//Sets the Light specular value
-	prog.setUniform("Lights[0].Ls", vec3(0.1f));
-	prog.setUniform("Lights[1].Ls", vec3(0.1f));
-	prog.setUniform("Lights[2].Ls", vec3(0.1f));
 
-	//Sets the Light ambient value
-	prog.setUniform("Lights[0].La", vec3(0.2f));
-	prog.setUniform("Lights[1].La", vec3(0.2f));
-	prog.setUniform("Lights[2].La", vec3(0.2f));
-	//---------------------------------------------
-	// 
-	// Point Light---------------------------------
-	prog.setUniform("PointLight.La", vec3(0.4f, 0.2f, 0.2f));
-	prog.setUniform("PointLight.Ld", vec3(3.8f, 1.0f, 1.0f));
-	prog.setUniform("PointLight.Ls", vec3(2.0f, 1.0f, 1.0f));
-	prog.setUniform("PointLight.constant", 0.001f);
-	prog.setUniform("PointLight.linear", 0.009f);
-	prog.setUniform("PointLight.quadratic", 0.0022f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	//----------------------------------------------
 
+	prog.use();
 
 	//sets the Material diffuse value
-	prog.setUniform("Material.Kd", 0.5f, 0.6f, 0.4f);
+	/*prog.setUniform("Material.Kd", 0.5f, 0.6f, 0.4f);
 	//sets the Material specular value
 	prog.setUniform("Material.Ks", 0.5f, 0.6f, 0.4f);
 	//sets the Material ambient value
@@ -377,20 +519,20 @@ void SceneBasic_Uniform::drawScene()
 	//sets the Material Shininess value
 	prog.setUniform("Material.Shininess", 100.0f);
 	model = mat4(1.0f);
-	setMatrices();
+	setMatrices(prog);
 	//renders the base plane
 	plane.render();
 
-	
+
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
 	prog.setUniform("Material.Shininess", 100.0f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(0.0f, 14.0f, 0.0f));
-	setMatrices();
+	setMatrices(prog);
 	//renders the 1st house
-	mesh->render();
+	mesh->render();*/
 
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
@@ -398,7 +540,7 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Shininess", 100.0f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(-29.0f, 14.0f, 36.0f));
-	setMatrices();
+	setMatrices(prog);
 	//renders the 2nd house
 	mesh->render();
 
@@ -408,11 +550,11 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Shininess", 100.0f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(29.0f, 14.0f, 36.0f));
-	setMatrices();
+	setMatrices(prog);
 	//renders the 3rd house
 	mesh->render();
 
-	
+
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
@@ -420,12 +562,54 @@ void SceneBasic_Uniform::drawScene()
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(0.0f, 1.0f, 35.0f));
 	model = glm::scale(model, vec3(3.3f, 3.3f, 3.3f));
-	setMatrices();
+	setMatrices(prog);
 	//renders the firePit located in the center of the scene
 	fire->render();
-	
 	//renders skybox
 	sky.render();
 	
+
+	model = mat4(1.0f);
+	//view = mat4(1.0f);
+	flatProg.use();
+	flatProg.setUniform("Time", time);
+	flatProg.setUniform("DeltaT", deltaT);
+	flatProg.setUniform("Pass", 1);
+	setMatrices(flatProg);
+
+	glEnable(GL_RASTERIZER_DISCARD);
+	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, feedback[drawBuf]);
+	glBeginTransformFeedback(GL_POINTS);
+
+	glBindVertexArray(particleArray[1 - drawBuf]);
+	glVertexAttribDivisor(0, 0);
+	glVertexAttribDivisor(1, 0);
+	glVertexAttribDivisor(2, 0);
+	glDrawArrays(GL_POINTS, 0, nParticles);
+	glBindVertexArray(0);
+
+	glEndTransformFeedback();
+	glDisable(GL_RASTERIZER_DISCARD);
+
+	// Pass 2: Render particles using instancing
+	flatProg.setUniform("Pass", 2);
+
+	setMatrices(flatProg);
+
+	glDepthMask(GL_FALSE);
+	glBindVertexArray(particleArray[drawBuf]);
+
+	glVertexAttribDivisor(0, 1);
+	glVertexAttribDivisor(1, 1);
+	glVertexAttribDivisor(2, 1);
+
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, nParticles*6);
+
+	glBindVertexArray(0);
+	glDepthMask(GL_TRUE);
+	drawBuf = 1 - drawBuf;
+	prog.use();
+
+
 
 }

@@ -72,12 +72,21 @@
     <ClCompile Include="helper\sphere.cpp">
       <Filter>helper</Filter>
     </ClCompile>
+    <ClCompile Include="helper\grid.cpp">
+      <Filter>helper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\basic_uniform.frag">
       <Filter>shaders</Filter>
     </None>
     <None Include="shader\basic_uniform.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shader\flat_vert.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="shader\flat_frag.glsl">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
@@ -147,6 +156,12 @@
     </ClInclude>
     <ClInclude Include="..\include\glad\glad.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helper\grid.h">
+      <Filter>helper</Filter>
+    </ClInclude>
+    <ClInclude Include="helper\particleutils.h">
+      <Filter>helper</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
