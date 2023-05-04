@@ -192,6 +192,7 @@
     <ClInclude Include="helper\torus.h" />
     <ClInclude Include="helper\trianglemesh.h" />
     <ClInclude Include="helper\utils.h" />
+    <ClInclude Include="main.h" />
     <ClInclude Include="scenebasic_uniform.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

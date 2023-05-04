@@ -11,6 +11,7 @@
 #include "helper/objmesh.h"
 #include "helper/skybox.h"
 
+#include <GLFW/glfw3.h>
 
 class SceneBasic_Uniform : public Scene
 {
@@ -24,6 +25,12 @@ private:
 
     GLuint feedback[2];
 
+    glm::vec3 position = glm::vec3(0, 0, 5);
+    float hor = 3.14f;
+    float ver = 0.0f;
+    float Initialfov = 45.0f;
+    float speed = 3.0f;
+    float mousespeed = 0.005f;
 
     
     int nParticles;
@@ -55,10 +62,12 @@ private:
     void drawScene();
     void setMatrices(GLSLProgram&);
     void initBuffers();
+    
 public:
 
     SceneBasic_Uniform();
     void initScene();
+    void userinput(double,double,bool,bool,bool,bool,bool);
     void update( float t );
     void render();
     void resize(int, int);

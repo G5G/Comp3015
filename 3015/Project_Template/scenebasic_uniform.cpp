@@ -302,6 +302,7 @@ void SceneBasic_Uniform::update(float t)
 	prog.setUniform("Lights[2].Position", vec4(lightPos));
 
 	prog.setUniform("PointLight.Position", vec4(5.0f * vec3(sinf(angle) * 7.5f, 1.5f, sinf(angle) * 7.5f), 1.0f));
+
 }
 
 void SceneBasic_Uniform::render()
@@ -313,7 +314,7 @@ void SceneBasic_Uniform::render()
 	//view = glm::lookAt(camerapos, vec3(0.0f, 1.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 	//runs each passes for bloom
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	view = glm::lookAt(vec3(10.0f, 10.0f, 55.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+	//view = glm::lookAt(vec3(10.0f, 10.0f, 55.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 	
 	prog.use();
 	
@@ -329,14 +330,36 @@ void SceneBasic_Uniform::render()
 
 	
 }
+void SceneBasic_Uniform::userinput(double CursorX,double CursorY,bool w,bool a,bool s,bool d,bool shift)
+{
 
+	//int x = (std::floor(CursorX));
+	//int y = (std::floor(CursorY));
+	speed = 3.0f;
+	hor += mousespeed  * float(400 - CursorX);
+	ver += mousespeed  * float(300 - CursorY);
+	glm::vec3 direction(cos(ver) * sin(hor), sin(ver), cos(ver) * cos(hor));
+	glm::vec3 right = glm::vec3(sin(hor - 3.14 / 2.0f), 0, cos(hor - 3.14f / 2.0f));
+	glm::vec3 up = glm::cross(right, direction);
+	if (shift == true) speed = 9.0f;
+	if (w == true)position += direction * deltaT * speed;
+	if (s == true)position -= direction * deltaT * speed;
+	if (d == true)position += right * deltaT * speed;
+	if (a == true) position -= right * deltaT * speed;
+	
+
+	float fov = Initialfov;
+
+
+	view = glm::lookAt(position,position+direction,up);
+}
 void SceneBasic_Uniform::resize(int w, int h)
 {
 
     glViewport(0, 0, w, h);
     width = w;
     height = h;
-	projection = glm::perspective(glm::radians(70.0f), (float)w / h, 0.3f, 100.0f);
+	projection = glm::perspective(glm::radians(Initialfov), (float)w / h, 0.3f, 100.0f);
     
     
 }
