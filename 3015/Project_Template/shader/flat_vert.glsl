@@ -24,8 +24,8 @@ uniform float ParticleLifetime;
 uniform vec3 Emitter = vec3(0);
 uniform mat3 EmitterBasis;
 uniform float ParticleSize;
-uniform float MinParticleSize=1.1;
-uniform float MaxParticleSize = 2.5;
+uniform float MinParticleSize=0.03;
+uniform float MaxParticleSize = 7.9;
 
 
 const vec3 offsets[] = vec3[](
@@ -43,7 +43,7 @@ vec3 randomInitialVelocity()
 
 }
 vec3 randomInitialPosition(){
-    float offset = mix(-2.0,2.0,texelFetch(RandomTex,2*gl_VertexID + 1,0).r);
+    float offset = mix(-1.0,1.0,texelFetch(RandomTex,2*gl_VertexID + 1,0).r);
     return Emitter + vec3(offset,0,0);
 }
 

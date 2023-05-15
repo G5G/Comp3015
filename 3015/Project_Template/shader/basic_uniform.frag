@@ -5,6 +5,7 @@ in vec3 Normal;
 in vec2 TexCoord;
 in vec3 Vec;
 
+
 //textures coming in
 layout(binding=3) uniform sampler2D Tex1;//wood texture
 layout(binding=4) uniform sampler2D Tex2;//moss texture
@@ -72,6 +73,7 @@ const vec3 lum = vec3(0.2126,0.7152,0.0722);
 vec3 pointLightPhong(vec3 norm, vec4 fragpos)//Point Light Phong
 {
 	//calculates the direction of the light
+	//vec3 lightdir = normalize(pointLightPositionCamSpace - fragPosCamSpace.xyz);
 	vec3 lightdir = normalize(PointLight.Position.xyz - fragpos.xyz);
 	//calculates the diffuse component
 	float dif = max(dot(norm,lightdir),0.0);
@@ -112,7 +114,8 @@ vec3 blinnPhong(vec3 n,vec4 pos, int i)//directional light phong
 	vec4 GroundColour=texture(Tex2,TexCoord);
 	vec3 texColour = mix(HouseColour.rgb,GroundColour.rgb,GroundColour.a);
 	vec3 ambient=Lights[i].La*Material.Ka* texColour;
-	vec3 s = normalize(Lights[i].Position.xyz - pos.xyz);
+	//vec3 s = normalize(Lights[i].Position.xyz - pos.xyz);
+	vec3 s = normalize(-Lights[i].Position.xyz);
 	float sDotN = max(dot(s,n),0.0);
 	vec3 diffuse = Lights[i].Ld*Material.Kd*sDotN;
 	vec3 spec = vec3(0.0);
@@ -154,6 +157,7 @@ vec4 pass1()//1st pass for bloom
 	color += pointshadeColour;
 	return vec4(color,1);
 }
+
 
 vec4 pass2() {
 	vec4 val = texture(HdrTex, TexCoord);

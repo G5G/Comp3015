@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(1), deltaT(0),time(0), particleLifetime(6.0f), nParticles(200), emitterPos(0, 1, 35.0f), emitterDir(1.1f, 11.1f, 111.1f)
+SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(1), deltaT(0),time(0), particleLifetime(3.0f), nParticles(600), emitterPos(0.0f, 1.0f, 35.0f), emitterDir(0.1f, 0.1f, 0.1f)
 {
 	//Load objects 
 	mesh = ObjMesh::load("../Project_Template/media/forest_cabin_LOD0.obj", true);
@@ -121,29 +121,29 @@ void SceneBasic_Uniform::initScene()
 	glBindSampler(2, nearestSampler);
 
 	prog.use();
-	prog.setUniform("Lights[0].Ld", vec3(0.1f));
-	prog.setUniform("Lights[1].Ld", vec3(0.1f));
-	prog.setUniform("Lights[2].Ld", vec3(0.1f));
+	prog.setUniform("Lights[0].Ld", vec3(0.2f));
+	prog.setUniform("Lights[1].Ld", vec3(0.2f));
+	prog.setUniform("Lights[2].Ld", vec3(0.2f));
 	//Sets the Light specular value
 	prog.setUniform("Lights[0].Ls", vec3(0.1f));
 	prog.setUniform("Lights[1].Ls", vec3(0.1f));
 	prog.setUniform("Lights[2].Ls", vec3(0.1f));
 
 	//Sets the Light ambient value
-	prog.setUniform("Lights[0].La", vec3(0.2f));
-	prog.setUniform("Lights[1].La", vec3(0.2f));
-	prog.setUniform("Lights[2].La", vec3(0.2f));
+	prog.setUniform("Lights[0].La", vec3(0.1f, 0.3f, 0.3f));
+	prog.setUniform("Lights[1].La", vec3(0.1f, 0.01f, 0.3f));
+	prog.setUniform("Lights[2].La", vec3(0.1f,0.3f,0.1f));
 	//---------------------------------------------
 	// 
 	// Point Light---------------------------------
-	prog.setUniform("PointLight.La", vec3(0.4f, 0.2f, 0.2f));
+	prog.setUniform("PointLight.La", vec3(0.8f, 0.3f, 0.1f));
 	prog.setUniform("PointLight.Ld", vec3(3.8f, 1.0f, 1.0f));
 	prog.setUniform("PointLight.Ls", vec3(2.0f, 1.0f, 1.0f));
-	prog.setUniform("PointLight.constant", 0.001f);
-	prog.setUniform("PointLight.linear", 0.009f);
+	prog.setUniform("PointLight.constant", 0.07f);
+	prog.setUniform("PointLight.linear", 0.03f);
 	prog.setUniform("PointLight.quadratic", 0.0022f);
 
-	
+	//prog.setUniform("PointLight.Position", vec3(1.0, 2.0, 3.0));
 
 	flatProg.use();
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -161,8 +161,7 @@ void SceneBasic_Uniform::initScene()
 	flatProg.setUniform("RandomTex", 8);
 	flatProg.setUniform("ParticleTex", 7);
 	flatProg.setUniform("ParticleLifetime", particleLifetime);
-	flatProg.setUniform("ParticleSize", 1.5f);
-	flatProg.setUniform("Accel", vec3(1.0f, 1.5f, 1.0f));
+	flatProg.setUniform("Accel", vec3(0.0f, 7.5f, 0.0f));
 	flatProg.setUniform("Emitter", emitterPos);
 	flatProg.setUniform("EmitterBasis", ParticleUtils::makeArbitraryBasis(emitterDir));
 
@@ -279,43 +278,24 @@ void SceneBasic_Uniform::compile()
 void SceneBasic_Uniform::update(float t)
 {
 
+
 	//calculates angle variable
 	deltaT = t - time;
 	time = t;
 	angle = std::fmod(angle + 0.01f, glm::two_pi<float>());
-	/*if (tPrev == 0.0f) {
-		deltaT = 0.0f;
-	}
-	tPrev = t;
-	angle += 0.25f * deltaT;
-	if (angle > glm::two_pi<float>()) {
-		angle -= glm::two_pi<float>();
-	}*/
 
 	//updates Light positions
 	prog.use();
-	vec4 lightPos = vec4(5.0f * vec3(cosf(angle) * 7.5f, 1.5f, sinf(angle) * 7.5f), 1.0f);
-	prog.setUniform("Lights[0].Position", vec4(lightPos));
-	lightPos = vec4(5.0f * vec3(cosf(-angle) * 7.5f, 1.5f, sinf(-angle) * 7.5f), 1.0f);
-	prog.setUniform("Lights[1].Position", vec4(lightPos));
-	lightPos = vec4(5.0f * vec3(cosf(angle) * 2.5f, 1.5f, sinf(-angle) * 4.5f), 1.0f);
-	prog.setUniform("Lights[2].Position", vec4(lightPos));
-
-	prog.setUniform("PointLight.Position", vec4(5.0f * vec3(sinf(angle) * 7.5f, 1.5f, sinf(angle) * 7.5f), 1.0f));
 
 }
 
 void SceneBasic_Uniform::render()
 {
 	//updates the view
-	//view = glm::lookAt(vec3(50.0f * cos(angle),7.5f, 7.5f*sin(angle)), vec3(0.0f, 0.75f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-	//view = glm::lookAt(vec3(4.0f * cos(angle), 1.5f, 4.0f * sin(angle)), vec3(0.0f, 1.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-	//vec3 camerapos(4.0 * cos(angle), 1.5f, 4.0f * sin(angle));
-	//view = glm::lookAt(camerapos, vec3(0.0f, 1.5f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 	//runs each passes for bloom
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	//view = glm::lookAt(vec3(10.0f, 10.0f, 55.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
-	
+	prog.setUniform("PointLight.Position", view*vec4(0.0f, 0.0f, 34.83215f,1.0f));
+
+	std::cout << angle << std::endl;
 	prog.use();
 	
 	pass1();
@@ -341,7 +321,7 @@ void SceneBasic_Uniform::userinput(double CursorX,double CursorY,bool w,bool a,b
 	glm::vec3 direction(cos(ver) * sin(hor), sin(ver), cos(ver) * cos(hor));
 	glm::vec3 right = glm::vec3(sin(hor - 3.14 / 2.0f), 0, cos(hor - 3.14f / 2.0f));
 	glm::vec3 up = glm::cross(right, direction);
-	if (shift == true) speed = 9.0f;
+	if (shift == true) speed = 19.0f;
 	if (w == true)position += direction * deltaT * speed;
 	if (s == true)position -= direction * deltaT * speed;
 	if (d == true)position += right * deltaT * speed;
@@ -352,6 +332,7 @@ void SceneBasic_Uniform::userinput(double CursorX,double CursorY,bool w,bool a,b
 
 
 	view = glm::lookAt(position,position+direction,up);
+	prog.setUniform("view", view);
 }
 void SceneBasic_Uniform::resize(int w, int h)
 {
@@ -368,7 +349,7 @@ void SceneBasic_Uniform::setMatrices(GLSLProgram& p)
 	//sets Matrices
 	mat4 mv = view * model;
 	p.setUniform("ModelViewMatrix", mv);
-	p.setUniform("NormalMatrix",glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
+    p.setUniform("NormalMatrix",glm::mat3(vec3(mv[0]), vec3(mv[1]), vec3(mv[2])));
 	p.setUniform("MVP", projection*mv);
 	p.setUniform("ProjectionMatrix", projection);
 	p.setUniform("MV", mv);
@@ -534,13 +515,10 @@ void SceneBasic_Uniform::drawScene()
 	prog.use();
 
 	//sets the Material diffuse value
-	prog.setUniform("Material.Kd", 0.5f, 0.6f, 0.4f);
-	//sets the Material specular value
-	prog.setUniform("Material.Ks", 0.5f, 0.6f, 0.4f);
-	//sets the Material ambient value
-	prog.setUniform("Material.Ka", 0.5f, 0.6f, 0.4f);
-	//sets the Material Shininess value
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Kd", 1.4f, 1.4f, 1.4f);
+	prog.setUniform("Material.Ks", 1.9f, 1.9f, 1.9f);
+	prog.setUniform("Material.Ka", 0.5f, 1.5f, 0.5f);
+	prog.setUniform("Material.Shininess", 0.01f);
 	model = mat4(1.0f);
 	setMatrices(prog);
 	//renders the base plane
@@ -550,7 +528,7 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Shininess", 0.01f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(0.0f, 14.0f, 0.0f));
 	setMatrices(prog);
@@ -560,7 +538,7 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Shininess", 0.01f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(-29.0f, 14.0f, 36.0f));
 	setMatrices(prog);
@@ -570,7 +548,7 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Shininess", 0.01f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(29.0f, 14.0f, 36.0f));
 	setMatrices(prog);
@@ -581,12 +559,14 @@ void SceneBasic_Uniform::drawScene()
 	prog.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
 	prog.setUniform("Material.Ks", 0.9f, 0.9f, 0.9f);
 	prog.setUniform("Material.Ka", 0.5f, 0.5f, 0.5f);
-	prog.setUniform("Material.Shininess", 100.0f);
+	prog.setUniform("Material.Shininess", 0.01f);
 	model = mat4(1.0f);
 	model = glm::translate(model, vec3(0.0f, 1.0f, 35.0f));
 	model = glm::scale(model, vec3(3.3f, 3.3f, 3.3f));
 	setMatrices(prog);
 	//renders the firePit located in the center of the scene
+
+
 	fire->render();
 	//renders skybox
 	sky.render();
@@ -632,6 +612,7 @@ void SceneBasic_Uniform::drawScene()
 	glBindVertexArray(0);
 	glDepthMask(GL_TRUE);
 	drawBuf = 1 - drawBuf;
+	
 	prog.use();
 
 

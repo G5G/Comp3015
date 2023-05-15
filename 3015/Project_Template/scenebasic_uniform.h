@@ -25,7 +25,7 @@ private:
 
     GLuint feedback[2];
 
-    glm::vec3 position = glm::vec3(0, 0, 5);
+    glm::vec3 position = glm::vec3(0, 10, 55);
     float hor = 3.14f;
     float ver = 0.0f;
     float Initialfov = 45.0f;
