@@ -129,7 +129,7 @@ private:
             bool w = false, a = false, s = false, d = false,shift = false;
             glfwGetCursorPos(window, &CursorX, &CursorY);
 
-            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)w = true;
+            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)w = true;//edited to make keys work
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)a = true;
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)s = true;
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)d = true;

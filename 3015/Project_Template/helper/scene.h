@@ -40,7 +40,7 @@ public:
       */
     virtual void resize(int, int) = 0;
 
-    virtual void userinput(double CursorX, double CursorY,bool w,bool a,bool s,bool d,bool shift) = 0;
+    virtual void userinput(double CursorX, double CursorY,bool w,bool a,bool s,bool d,bool shift) = 0;//edited to make keys work
 
     
     

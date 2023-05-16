@@ -7,16 +7,15 @@ in vec3 Vec;
 
 
 //textures coming in
-layout(binding=3) uniform sampler2D Tex1;//wood texture
-layout(binding=4) uniform sampler2D Tex2;//moss texture
-layout(binding=5) uniform samplerCube sky;//skybox texture
-
 layout(binding=0) uniform sampler2D HdrTex;//hdr texture
 layout (binding=1) uniform sampler2D BlurTex1;//blur for bloom
 layout (binding=2) uniform sampler2D BlurTex2;//more bloom :D
 
-layout (location = 0) out vec4 FragColour;//sends to the gpu
+layout(binding=3) uniform sampler2D Tex1;//wood texture
+layout(binding=4) uniform sampler2D Tex2;//moss texture
+layout(binding=5) uniform samplerCube sky;//skybox texture
 
+layout (location = 0) out vec4 FragColour;//sends to the gpu
 uniform float LumThresh;//lum threshold for bloom
 uniform int Pass;//to know which pass needs to be done
 uniform float AveLum;//average Luminance
@@ -34,6 +33,8 @@ uniform float Exposure = 0.035;//sets the exposure
 uniform float White = 0.0828;
 uniform float PixOffset[10] = float[](0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0);
 uniform float Weight[10];
+
+const vec3 lum = vec3(0.2126,0.7152,0.0722);
 
 uniform struct PointlightInfo
 {
@@ -68,7 +69,6 @@ uniform struct FogInfo
 	vec3 Colour;
 }Fog;
 
-const vec3 lum = vec3(0.2126,0.7152,0.0722);
 
 vec3 pointLightPhong(vec3 norm, vec4 fragpos)//Point Light Phong
 {
@@ -130,7 +130,7 @@ vec3 blinnPhong(vec3 n,vec4 pos, int i)//directional light phong
 
 float luminance( vec3 color )
 {
-	return 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+	return dot(lum,color);
 }
 
 vec4 pass1()//1st pass for bloom
@@ -146,13 +146,13 @@ vec4 pass1()//1st pass for bloom
 	for( int i = 0; i < 3; i++)
 	{
 		//gets the output of the blinn phong function 3 times as that's how many directional lights there are
-		shadeColour = blinnPhong(n,Position,i);
+		shadeColour = blinnPhong(normalize(n),Position,i);
 		//combines it with the fog
 		color += mix(Fog.Colour,shadeColour,fogFactor);
 
 	}
 	//gets the output of the point light phong function
-	pointshadeColour = pointLightPhong(n,Position);
+	pointshadeColour = pointLightPhong(normalize(n),Position);
 	//combines it with the directional light phong, the fog and the point light
 	color += pointshadeColour;
 	return vec4(color,1);
@@ -170,6 +170,8 @@ vec4 pass2() {
 		return vec4(0.0);
 	}
 }
+
+
 vec4 pass3() {
 	float dy = 1.0 / (textureSize(BlurTex1,0)).y;
 	vec4 sum = texture(BlurTex1, TexCoord) * Weight[0];
@@ -218,6 +220,7 @@ vec4 pass5() {
 void main()
 {
 	//runs each pass
+
 	if(Pass == 1)
 		FragColour = pass1();
 	else if(Pass == 2)

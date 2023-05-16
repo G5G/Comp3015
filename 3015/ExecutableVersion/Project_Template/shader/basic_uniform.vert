@@ -12,10 +12,14 @@ out vec2 TexCoord;
 out vec3 Vec;
 
 
+
+
 uniform mat4 ModelViewMatrix;
 uniform mat3 NormalMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 MVP;
+
+
 
 
 
@@ -27,6 +31,7 @@ void getCamSpaceValues(out vec3 norm, out vec4 position)
 	norm=normalize(NormalMatrix*VertexNormal);
 	position=(ModelViewMatrix*vec4(VertexPosition,1.0));
 }
+
 
 void main()
 {

@@ -18,7 +18,7 @@ using glm::vec4;
 using glm::mat3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(1), deltaT(0),time(0), particleLifetime(3.0f), nParticles(600), emitterPos(0.0f, 1.0f, 35.0f), emitterDir(0.1f, 0.1f, 0.1f)
+SceneBasic_Uniform::SceneBasic_Uniform() : tPrev(0.0f), plane(300.0f, 300.0f, 1, 1), sky(100.0f), angle(0.0f), drawBuf(1), deltaT(0),time(0), particleLifetime(3.5f), nParticles(600), emitterPos(0.0f, 1.0f, 35.0f), emitterDir(0.1f, 0.1f, 0.1f)
 {
 	//Load objects 
 	mesh = ObjMesh::load("../Project_Template/media/forest_cabin_LOD0.obj", true);
@@ -143,7 +143,6 @@ void SceneBasic_Uniform::initScene()
 	prog.setUniform("PointLight.linear", 0.03f);
 	prog.setUniform("PointLight.quadratic", 0.0022f);
 
-	//prog.setUniform("PointLight.Position", vec3(1.0, 2.0, 3.0));
 
 	flatProg.use();
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -294,8 +293,6 @@ void SceneBasic_Uniform::render()
 	//updates the view
 	//runs each passes for bloom
 	prog.setUniform("PointLight.Position", view*vec4(0.0f, 0.0f, 34.83215f,1.0f));
-
-	std::cout << angle << std::endl;
 	prog.use();
 	
 	pass1();
@@ -312,9 +309,6 @@ void SceneBasic_Uniform::render()
 }
 void SceneBasic_Uniform::userinput(double CursorX,double CursorY,bool w,bool a,bool s,bool d,bool shift)
 {
-
-	//int x = (std::floor(CursorX));
-	//int y = (std::floor(CursorY));
 	speed = 3.0f;
 	hor += mousespeed  * float(400 - CursorX);
 	ver += mousespeed  * float(300 - CursorY);
